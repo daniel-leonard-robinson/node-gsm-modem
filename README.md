@@ -53,6 +53,10 @@ API
 ===
 See wiki [page](https://github.com/paintenzero/node-gsm-modem/wiki/api).
 
+Developing
+=================
+U-blox SARA U270
+
 Checked on modems
 =================
 * Huawei 3121S

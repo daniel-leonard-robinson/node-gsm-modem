@@ -16,15 +16,20 @@ function onDisconnect (modem) {
 
 
 var modem1 = new Modem({
-    port : '/dev/ttyUSB0',
-    notify_port : '/dev/ttyUSB1',
+    //port : '/dev/ttyUSB0',
+    port : 'COM38',
+    //notify_port : '/dev/ttyUSB1',
+    notify_port : 'COM39',
     onDisconnect : onDisconnect,
-    balance_ussd : '*102*1#',
+    //balance_ussd : '*102*1#',
+    balance_ussd : '*101#',
     dollar_regexp : /(-?\d+)\s*rub/,
     cents_regexp : /(-?\d+)\s*kop/,
     debug : true
 });
-modem1.on('message', onStatusReport);
+modem1.on('message', onStatusReport, function(){
+    console.log("message_callback");
+});
 modem1.on('report', onStatusReport);
 modem1.on('USSD', onUSSD);
 
@@ -35,20 +40,36 @@ modem1.connect(function () {
     });
 
     modem1.sendSMS({
-        receiver : 'ENTER YOUR NUMBER HERE',
+        receiver : 'ENTER NUMBER HERE',
         text : 'Проверка связи, однако!',
         request_status : true
     }, function (err, data) {
         console.log('sendSMS', data);
     });
 
-    modem1.deleteAllSMS (function(err){
-        if (err === undefined) {
-            console.log ('all messages were deleted');
+    modem1.getSignalStrength(function(err, data){
+        if (!err) {
+            console.log('getSignalStrength', data)
         } else {
-            console.log ('messages were not deleted');
+            console.log(err);
         }
     });
+
+    modem1.customATCommand('AT+CIND?', function(err, data){
+        console.log('networkIndication', data)
+    });
+
+    modem1.getUSSD('*101#', function(err, data){
+        console.log('balance', data)
+    })
+
+    //modem1.deleteAllSMS (function(err){
+    //    if (err === undefined) {
+    //        console.log ('all messages were deleted');
+    //    } else {
+    //        console.log ('messages were not deleted');
+    //    }
+    //});
 
 });
 
