@@ -1245,6 +1245,31 @@ Modem.prototype.getSignalStrength = function (cb) {
     }
   });
 };
+
+/**
+ *  Gets internal PDP connection information
+ *  @param cb function to call on completion. Returns dictionary with
+ *  keys APN, username, dns1 and dns2.
+ */
+Modem.prototype.getConnectionProfile = function(cb) {
+    "use strict";
+    var values = [];
+    this.sendCommand('AT+UPSD=0', function(data) {
+        if (typeof cb === 'function'){
+            data.match(/\+UPSD:\s0,[1-5],"(.*)"\s*/g).forEach(function(res) {
+                values.push(res.match(/\+UPSD:\s0,[1-5],"(.*)"\s*/)[1]);
+            });
+            cb(undefined, {
+                apn : values[0],
+                username : values[1],
+                dns1 : values[2],
+                dns2 : values[3]
+            });
+        }
+    });
+}
+
+
 /**
  * Sends custom AT command
  */

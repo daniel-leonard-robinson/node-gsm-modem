@@ -19,7 +19,7 @@ var modem1 = new Modem({
     //port : '/dev/ttyUSB0',
     port : 'COM38',
     //notify_port : '/dev/ttyUSB1',
-    notify_port : 'COM39',
+    //notify_port : 'COM39',
     onDisconnect : onDisconnect,
     //balance_ussd : '*102*1#',
     balance_ussd : '*101#',
@@ -61,7 +61,17 @@ modem1.connect(function () {
 
     modem1.getUSSD('*101#', function(err, data){
         console.log('balance', data)
-    })
+    });
+
+    modem1.getConnectionProfile(function(err, data){
+        if (!err){
+            if (data.username != 'internet'){
+                console.dir(data);
+            }
+        }
+    });
+
+
 
     //modem1.deleteAllSMS (function(err){
     //    if (err === undefined) {
