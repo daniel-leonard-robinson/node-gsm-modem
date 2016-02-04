@@ -837,13 +837,9 @@ Modem.prototype.setReadStorage = function (storage, cb) {
   if (storage[0] !== '"') { storage = '"' + storage + '"'; }
   this.sendCommand('AT+CPMS=' + storage + ',,', function (data) {
     if (typeof cb === 'function') {
-      if (data.indexOf('OK') !== -1) {
-        cb(undefined);
-      } else {
-        cb(new Error(data));
-      }
+        this.OK(data, cb)
     }
-  });
+  }.bind(this));
 };
 
 /**
@@ -854,13 +850,9 @@ Modem.prototype.setInboxOutboxStorage = function (inbox, outbox, cb) {
   if (outbox[0] !== '"') { outbox = '"' + outbox + '"'; }
   this.sendCommand('AT+CPMS=' + inbox + ',' + outbox + ',' + inbox, function (data) {
     if (typeof cb === 'function') {
-      if (data.indexOf('OK') !== -1) {
-        cb(undefined);
-      } else {
-        cb(new Error(data));
-      }
+        this.OK(data, cb)
     }
-  });
+  }.bind(this));
 };
 
 /**
@@ -994,13 +986,9 @@ Modem.prototype.sendSMS = function (message, cb) {
 Modem.prototype.deleteAllSMS = function (cb) {
   this.sendCommand('AT+CMGD=1,4', function (data) {
     if (typeof cb === 'function') {
-      if (-1 === data.indexOf('OK')) {
-        cb(new Error(data));
-      } else {
-        cb(undefined);
-      }
+        this.OK(data, cb)
     }
-  });
+  }.bind(this));
 };
 /**
  * Deletes message by id
@@ -1008,13 +996,9 @@ Modem.prototype.deleteAllSMS = function (cb) {
 Modem.prototype.deleteSMS = function (smsId, cb) {
   this.sendCommand('AT+CMGD=' + smsId, function (data) {
     if (typeof cb === 'function') {
-      if (-1 === data.indexOf('OK')) {
-        cb(new Error(data));
-      } else {
-        cb(undefined);
-      }
+        this.OK(data, cb)
     }
-  });
+  }.bind(this));
 };
 /**
  * Reads ZTE status reports
@@ -1200,11 +1184,7 @@ Modem.prototype.getIsCallerIdSupported = function (cb) {
 Modem.prototype.setSendCallerId = function (val, cb) {
   "use strict";
   this.sendCommand('AT+CLIP=' + (val ? "1" : "0"), function (data) {
-    if (data.indexOf('OK') === -1) {
-      cb(new Error(data));
-    } else {
-        cb(undefined);
-    }
+      this.OK(data, cb)
   }.bind(this));
 };
 /**
@@ -1247,7 +1227,7 @@ Modem.prototype.getSignalStrength = function (cb) {
 };
 
 /**
- *  Gets internal PDP connection information
+ *  Gets internal PDP connection profile information.
  *  @param cb function to call on completion. Returns dictionary with
  *  keys APN, username, dns1 and dns2.
  */
@@ -1259,14 +1239,64 @@ Modem.prototype.getConnectionProfile = function(cb) {
             data.match(/\+UPSD:\s0,[1-5],"(.*)"\s*/g).forEach(function(res) {
                 values.push(res.match(/\+UPSD:\s0,[1-5],"(.*)"\s*/)[1]);
             });
-            cb(undefined, {
-                apn : values[0],
-                username : values[1],
-                dns1 : values[2],
-                dns2 : values[3]
-            });
+            if (values.length > 0){
+                cb(undefined, {
+                    apn : values[0],
+                    username : values[1],
+                    dns1 : values[2],
+                    dns2 : values[3]
+                });
+            }
+            else {
+                cb(new Error('AT Command does not exist.'), undefined)
+            }
         }
     });
+}
+
+/**
+ * Sets apn
+ * @param cb function to call on completion.
+ */
+Modem.prototype.setAPN = function(apn, cb) {
+    this.sendCommand('AT+UPSD=0,1,\"' + apn + '\"', function(data) {
+            this.OK(data, cb)
+        }.bind(this)
+    )
+}
+
+/**
+ * Checks if OK was received.
+ * @param data  looks inside for 'OK'
+ * @param cb  to be called upon completion.
+ */
+Modem.prototype.OK = function(data, cb) {
+    if (data.indexOf('OK') === -1) {
+        cb(new Error(data))
+    } else {
+        cb(undefined)
+    }
+}
+
+
+/**
+ * Activates PDP internet connection profile
+ * @param cb function to call on completion.
+ */
+Modem.prototype.enableInternet = function(enable, cb) {
+    this.sendCommand('AT+UPSND=0,8', function(data) {
+        this.enabled = parseInt(data.match(/\+UPSND:\s0,8,(\d)/)[1]);
+        if (enable && !this.enabled){
+            this.sendCommand('AT+UPSDA=0,3', function(data) {
+                this.OK(data, cb)
+            }.bind(this))
+        }
+        else if (!enable && this.enabled) {
+            this.sendCommand('AT+UPSDA=0,4', function(data) {
+                this.OK(data, cb)
+            }.bind(this))
+        }
+    }.bind(this));
 }
 
 
@@ -1276,13 +1306,9 @@ Modem.prototype.getConnectionProfile = function(cb) {
 Modem.prototype.customATCommand = function (cmd, cb) {
   this.sendCommand(cmd, function (data) {
     if (typeof cb === 'function') {
-      if (data.indexOf('OK') !== -1) {
-        cb(undefined, data);
-      } else {
-        cb(new Error(data));
-      }
+        this.OK(data, cb)
     }
-  });
+  }.bind(this));
 };
 
 module.exports = Modem;
