@@ -1,5 +1,4 @@
 var Modem = require('./');
-var apn = 'internet';
 
 function onSMS (sms) {
     console.log('onSMS', sms);
@@ -63,29 +62,23 @@ modem1.connect(function () {
         console.log('balance', data)
     });
 
-    modem1.getConnectionProfile(function(err, data){
-        if (!err) {
-            if (data.username !== apn) {
-                modem1.setAPN(apn, function (err) {
-                    if (err) console.log(err);
-                })
-            }
-            modem1.enableInternet(true, function (err) {
-                if (err) console.log(err)
-                else {
-                    // modem1.
-                }
-            })
-        } else err;
-    });
+    modem1.setupInternet({
+        apn: 'internet',
+        //username: 'bob',
+        //password: 'thebuilder',
+        //dns1: '8.8.8.8',
+        //dns2: '8.8.4.4'
+    }, function(err) {
+        if (err) console.log(err)
+    })
 
-    //modem1.deleteAllSMS (function(err){
-    //    if (err === undefined) {
-    //        console.log ('all messages were deleted');
-    //    } else {
-    //        console.log ('messages were not deleted');
-    //    }
-    //});
+    modem1.deleteAllSMS (function(err){
+        if (err === undefined) {
+            console.log ('all messages were deleted');
+        } else {
+            console.log ('messages were not deleted');
+        }
+    });
 
 });
 
